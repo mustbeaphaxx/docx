@@ -910,3 +910,131 @@ header h2 {
     padding: 1rem;
     border-radius: 8px;
 }
+
+/* =========================================
+   MOBILE RESPONSIVE (iPhone / Small Screens)
+   ========================================= */
+@media screen and (max-width: 768px) {
+    
+    /* 1. App Container changes */
+    .app-container {
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* 2. Sidebar: Off-canvas by default */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 85vw; /* Wider on mobile for better usability */
+        max-width: 320px;
+        z-index: 2000;
+        transform: translateX(-100%); /* Hidden by default */
+        box-shadow: 2px 0 20px rgba(0,0,0,0.5);
+    }
+
+    .sidebar.mobile-open {
+        transform: translateX(0); /* Slide in */
+    }
+    
+    .sidebar.collapsed {
+        /* Override desktop "collapsed" logic if necessary, 
+           or just rely on mobile-open class */
+        width: 85vw; /* maintain width so it doesn't shrink to 0 */
+        transform: translateX(-100%);
+        padding: 2rem;
+        opacity: 1;
+        border-right: 1px solid var(--glass-border);
+    }
+
+    /* 3. Main Content: Full width */
+    .main-content {
+        width: 100%;
+        margin-left: 0 !important; /* Override any desktop margin */
+    }
+
+    /* 4. Overlay for clicking outside sidebar */
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.5);
+        backdrop-filter: blur(4px);
+        z-index: 1999;
+        display: none;
+    }
+    .sidebar-overlay.active {
+        display: block;
+    }
+
+    /* 5. Header adjustments */
+    header {
+        padding: 1rem;
+    }
+
+    /* Ensure hamburger menu is visible */
+    #btn-expand-sidebar {
+        display: flex !important; 
+    }
+    
+    /* 6. Content areas padding (Note, Maps, etc) */
+    .paper-sheet {
+        padding: 2rem 1.5rem; /* Smaller padding on phone */
+        width: 100%;
+        min-height: 80vh;
+    }
+
+    .flashcard-container {
+        padding: 1rem;
+    }
+    
+    .flashcard {
+        height: 400px; /* Taller for vertical scrolling if needed */
+        max-width: 100%;
+    }
+
+    .flashcard-face {
+        padding: 1.5rem;
+    }
+
+    .mcq-card {
+        padding: 1.5rem;
+    }
+
+    /* 7. Modals (Popovers) */
+    .popover {
+        width: 90vw !important;
+        max-width: 400px;
+    }
+
+    /* 8. Text Sizing adjustments */
+    .logo h1 {
+        font-size: 1.3rem;
+    }
+    
+    header h2 {
+        font-size: 1.1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 60vw;
+    }
+    
+    /* Dictionary Popup mobile fix */
+    #dictionary-popup {
+        width: 90vw;
+        left: 50% !important;
+        transform: translateX(-50%);
+    }
+
+    /* Flashcard controls */
+    .flashcard-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}

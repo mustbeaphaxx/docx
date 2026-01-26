@@ -272,8 +272,59 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // --- Sidebar Toggle ---
-    btnCollapseSidebar.addEventListener('click', () => { sidebar.classList.add('collapsed'); btnExpandSidebar.classList.remove('hidden'); });
-    btnExpandSidebar.addEventListener('click', () => { sidebar.classList.remove('collapsed'); btnExpandSidebar.classList.add('hidden'); });
+    // --- Sidebar Toggle ---
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+    function toggleSidebarMobile(show) {
+        if (show) {
+            sidebar.classList.add('mobile-open');
+            sidebarOverlay.classList.add('active');
+        } else {
+            sidebar.classList.remove('mobile-open');
+            sidebarOverlay.classList.remove('active');
+        }
+    }
+
+    btnCollapseSidebar.addEventListener('click', () => { 
+        if (window.innerWidth <= 768) {
+            toggleSidebarMobile(false);
+        } else {
+            sidebar.classList.add('collapsed'); 
+            btnExpandSidebar.classList.remove('hidden'); 
+        }
+    });
+
+    btnExpandSidebar.addEventListener('click', () => { 
+        if (window.innerWidth <= 768) {
+            toggleSidebarMobile(true);
+        } else {
+            sidebar.classList.remove('collapsed'); 
+            btnExpandSidebar.classList.add('hidden'); 
+        }
+    });
+
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', () => {
+            toggleSidebarMobile(false);
+        });
+    }
+
+    // Close sidebar on mobile when a nav item is clicked (optional but good UX)
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768 && e.target.closest('.nav-header') && !e.target.closest('.tree-actions')) {
+             // Only close if it's a leaf node selection or navigation action, 
+             // but user might want to browse. Let's keep it manual close or close on "leaf" click.
+             // For now, let's explicitely close if they select a Note/Quiz/Deck/MindMap
+             if (e.target.closest('.nav-item') && (
+                 e.target.closest('.nav-item').innerHTML.includes('description') || // Note
+                 e.target.closest('.nav-item').innerHTML.includes('style') ||       // Deck
+                 e.target.closest('.nav-item').innerHTML.includes('quiz') ||        // Quiz
+                 e.target.closest('.nav-item').innerHTML.includes('account_tree')   // MindMap (if any)
+             )) {
+                 toggleSidebarMobile(false);
+             }
+        }
+    });
 
     // --- Edit Mode & Formatting ---
     btnModeToggle.addEventListener('click', () => toggleEditMode(!isEditMode));

@@ -163,6 +163,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     const authError = document.getElementById('auth-error');
     const btnLogout = document.getElementById('btn-logout');
 
+    // Info Modal
+    const infoModal = document.getElementById('info-modal');
+    const btnShowInfo = document.getElementById('btn-show-info');
+    const btnCloseInfo = document.getElementById('btn-close-info');
+
+    if (btnShowInfo) {
+        btnShowInfo.addEventListener('click', () => {
+            infoModal.classList.remove('hidden');
+        });
+    }
+    if (btnCloseInfo) {
+        btnCloseInfo.addEventListener('click', () => {
+            infoModal.classList.add('hidden');
+        });
+    }
+    window.addEventListener('click', (e) => {
+        if (e.target === infoModal) infoModal.classList.add('hidden');
+    });
+
 
     function startFirebaseSync() {
         console.log("Starting Firebase Sync...");

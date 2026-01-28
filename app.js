@@ -285,21 +285,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    btnCollapseSidebar.addEventListener('click', () => { 
+    btnCollapseSidebar.addEventListener('click', () => {
         if (window.innerWidth <= 768) {
             toggleSidebarMobile(false);
         } else {
-            sidebar.classList.add('collapsed'); 
-            btnExpandSidebar.classList.remove('hidden'); 
+            sidebar.classList.add('collapsed');
+            btnExpandSidebar.classList.remove('hidden');
         }
     });
 
-    btnExpandSidebar.addEventListener('click', () => { 
+    btnExpandSidebar.addEventListener('click', () => {
         if (window.innerWidth <= 768) {
             toggleSidebarMobile(true);
         } else {
-            sidebar.classList.remove('collapsed'); 
-            btnExpandSidebar.classList.add('hidden'); 
+            sidebar.classList.remove('collapsed');
+            btnExpandSidebar.classList.add('hidden');
         }
     });
 
@@ -312,17 +312,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Close sidebar on mobile when a nav item is clicked (optional but good UX)
     document.addEventListener('click', (e) => {
         if (window.innerWidth <= 768 && e.target.closest('.nav-header') && !e.target.closest('.tree-actions')) {
-             // Only close if it's a leaf node selection or navigation action, 
-             // but user might want to browse. Let's keep it manual close or close on "leaf" click.
-             // For now, let's explicitely close if they select a Note/Quiz/Deck/MindMap
-             if (e.target.closest('.nav-item') && (
-                 e.target.closest('.nav-item').innerHTML.includes('description') || // Note
-                 e.target.closest('.nav-item').innerHTML.includes('style') ||       // Deck
-                 e.target.closest('.nav-item').innerHTML.includes('quiz') ||        // Quiz
-                 e.target.closest('.nav-item').innerHTML.includes('account_tree')   // MindMap (if any)
-             )) {
-                 toggleSidebarMobile(false);
-             }
+            // Only close if it's a leaf node selection or navigation action, 
+            // but user might want to browse. Let's keep it manual close or close on "leaf" click.
+            // For now, let's explicitely close if they select a Note/Quiz/Deck/MindMap
+            if (e.target.closest('.nav-item') && (
+                e.target.closest('.nav-item').innerHTML.includes('description') || // Note
+                e.target.closest('.nav-item').innerHTML.includes('style') ||       // Deck
+                e.target.closest('.nav-item').innerHTML.includes('quiz') ||        // Quiz
+                e.target.closest('.nav-item').innerHTML.includes('account_tree')   // MindMap (if any)
+            )) {
+                toggleSidebarMobile(false);
+            }
         }
     });
 
@@ -463,25 +463,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         (appData.lessons || []).forEach(l => {
             l.topics.forEach(t => {
                 t.notes.forEach(n => {
-                    if (n.headers) n.headers.forEach(h => { if (h.length > 2) headerIndex[h.toLowerCase()] = n.id; });
+                    // Headers: Store as lowercase keys for lookup
+                    if (n.headers) n.headers.forEach(h => {
+                        if (h.length > 2) headerIndex[h.toLowerCase()] = n.id;
+                    });
+                    // Titles: Store as lowercase keys for lookup
                     if (n.title && n.title.length > 2) headerIndex[n.title.toLowerCase()] = n.id;
                 });
             });
         });
 
         let html = editor.innerHTML;
-        // Don't re-link already linked items
-        // Simplified regex to avoid breaking existing HTML tags
-        Object.keys(headerIndex).forEach(headerText => {
-            const regex = new RegExp(`(?<!<[^>]*)\\b(${escapeRegExp(headerText)})\\b`, 'gi');
+
+        // 1. Sort Headers/Titles by Length DESC to prevent substring collisions
+        const sortedHeaderKeys = Object.keys(headerIndex).sort((a, b) => b.length - a.length);
+
+        sortedHeaderKeys.forEach(headerKey => {
+            // Prevent self-linking (don't link to the note we are currently editing)
+            if (headerIndex[headerKey] === currentNoteId) return;
+
+            // Use the key (lowercase) to find the ID, but escape the key for regex matching (case-insensitive)
+            // Note: headerKey is already lowercase, but the text in the doc might not be.
+            const regex = new RegExp(`(?<!<[^>]*)\\b(${escapeRegExp(headerKey)})\\b`, 'gi');
+
             // Avoid double linking
-            if (!html.includes(`data-note-id="${headerIndex[headerText]}"`)) {
+            if (!html.includes(`data-note-id="${headerIndex[headerKey]}"`)) {
                 html = html.replace(regex, (match) => {
-                    return `<span class="linked-header" data-note-id="${headerIndex[headerText]}">${match}</span>`;
+                    return `<span class="linked-header" data-note-id="${headerIndex[headerKey]}">${match}</span>`;
                 });
             }
         });
-        Object.keys(dictionary).forEach(term => {
+
+        // 2. Sort Dictionary Terms by Length DESC
+        const sortedDictKeys = Object.keys(dictionary).sort((a, b) => b.length - a.length);
+
+        sortedDictKeys.forEach(term => {
             const regex = new RegExp(`(?<!<[^>]*)\\b(${escapeRegExp(term)})\\b`, 'gi');
             if (!html.includes(`data-term="${term}"`)) {
                 html = html.replace(regex, (match) => {
@@ -489,6 +505,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             }
         });
+
         if (editor.innerHTML !== html) editor.innerHTML = html;
     }
 
@@ -539,8 +556,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const selection = window.getSelection();
         const explanationText = selection.toString().trim();
         if (explanationText.length > 0) {
-            const term = termBeingDefined.text;
+            // Force lowercase for dictionary keys
+            const term = termBeingDefined.text.toLowerCase();
             const noteTitle = document.getElementById('doc-title').textContent || "Unknown Note";
+
             if (!dictionary[term]) dictionary[term] = [];
             dictionary[term].push({ definition: explanationText, noteId: currentNoteId, noteTitle: noteTitle });
             saveDictionary();
@@ -549,8 +568,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const span = document.createElement('span');
                 span.className = 'defined-term';
-                span.textContent = termBeingDefined.text;
-                span.dataset.term = term;
+                span.textContent = termBeingDefined.text; // Keep display text as is
+                span.dataset.term = term; // Key is lowercase
                 termBeingDefined.range.deleteContents();
                 termBeingDefined.range.insertNode(span);
             } catch (e) { console.error(e); }
@@ -567,7 +586,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- Global Tooltips ---
     document.body.addEventListener('mouseover', (e) => {
         if (e.target.classList.contains('defined-term')) {
-            const term = e.target.dataset.term || e.target.textContent;
+            const term = e.target.dataset.term || e.target.textContent.toLowerCase();
             const entries = dictionary[term];
             if (entries) {
                 let html = `<strong>${term}</strong><hr style="margin: 4px 0; border: 0; border-top: 1px solid rgba(255,255,255,0.2);">`;
@@ -580,7 +599,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         if (e.target.classList.contains('linked-header')) {
-            tooltipText.textContent = "Go to cross-linked note";
+            tooltipText.textContent = "Go to note";
             positionTooltip(e.target);
         }
     });
@@ -1052,21 +1071,85 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Render Dictionary & Tooltips
+    // Render Dictionary & Tooltips
     function renderDictionaryList() {
-        const list = document.getElementById('dictionary-list'); list.innerHTML = '';
-        Object.keys(dictionary).forEach(term => {
-            const entries = dictionary[term]; const li = document.createElement('li'); li.className = 'dict-item'; li.style.flexDirection = 'column';
-            li.innerHTML = `<div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;"><span class="term" style="margin:0;">${term}</span><button class="btn-delete-term"><span class="material-symbols-rounded" style="font-size:16px;">delete_forever</span></button></div>`;
-            li.querySelector('.btn-delete-term').onclick = (e) => { e.stopPropagation(); delete dictionary[term]; saveDictionary(); renderDictionaryList(); };
-            const ul = document.createElement('ul'); ul.style.listStyle = 'none'; ul.style.paddingLeft = '0.5rem'; ul.style.borderLeft = '1px solid var(--glass-border)';
-            entries.forEach((entry, idx) => {
-                const dl = document.createElement('li'); dl.style.marginBottom = '0.5rem'; dl.style.fontSize = '0.85rem'; dl.style.display = 'flex';
-                const source = entry.noteTitle ? `<div style="font-size: 0.7rem; color: #a29bfe; opacity: 0.8; margin-top:2px;">via ${entry.noteTitle}</div>` : '';
-                dl.innerHTML = `<div style="flex:1;"><div style="color:var(--text-primary);">${entry.definition}</div>${source}</div><button class="btn-delete-term" style="opacity:0.3; padding:0;"><span class="material-symbols-rounded" style="font-size:14px;">close</span></button>`;
-                dl.querySelector('button').onclick = (e) => { e.stopPropagation(); entries.splice(idx, 1); if (entries.length === 0) delete dictionary[term]; saveDictionary(); renderDictionaryList(); };
-                ul.appendChild(dl);
+        const list = document.getElementById('dictionary-list');
+        list.innerHTML = '';
+
+        // 1. Collect all Dictionary Terms
+        const dictItems = Object.keys(dictionary).map(term => ({
+            type: 'term',
+            label: term,
+            key: term.toLowerCase()
+        }));
+
+        // 2. Collect all Note Titles
+        const noteItems = [];
+        (appData.lessons || []).forEach(l => {
+            l.topics.forEach(t => {
+                t.notes.forEach(n => {
+                    if (n.title && n.title.length > 0) {
+                        noteItems.push({
+                            type: 'note',
+                            label: n.title,
+                            id: n.id,
+                            key: n.title.toLowerCase()
+                        });
+                    }
+                });
             });
-            li.appendChild(ul); list.appendChild(li);
+        });
+
+        // 3. Merge and Sort
+        const allItems = [...dictItems, ...noteItems].sort((a, b) => a.key.localeCompare(b.key));
+
+        allItems.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'dict-item';
+            li.style.flexDirection = 'column';
+
+            if (item.type === 'note') {
+                // Render Note Title
+                li.style.cursor = 'pointer';
+                li.style.borderLeft = '3px solid #ff7675'; // Distinguish note
+                li.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="term" style="margin:0; color: #ff7675;">${item.label}</span>
+                        <span class="material-symbols-rounded" style="font-size:14px; opacity:0.5;">description</span>
+                    </div>
+                `;
+                li.onclick = () => loadNote(item.id);
+            } else {
+                // Render Dictionary Term
+                const term = item.label;
+                const entries = dictionary[term];
+
+                li.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
+                        <span class="term" style="margin:0;">${term}</span>
+                        <button class="btn-delete-term"><span class="material-symbols-rounded" style="font-size:16px;">delete_forever</span></button>
+                    </div>
+                `;
+                li.querySelector('.btn-delete-term').onclick = (e) => { e.stopPropagation(); delete dictionary[term]; saveDictionary(); renderDictionaryList(); };
+
+                const ul = document.createElement('ul');
+                ul.style.listStyle = 'none';
+                ul.style.paddingLeft = '0.5rem';
+                ul.style.borderLeft = '1px solid var(--glass-border)';
+
+                entries.forEach((entry, idx) => {
+                    const dl = document.createElement('li');
+                    dl.style.marginBottom = '0.5rem';
+                    dl.style.fontSize = '0.85rem';
+                    dl.style.display = 'flex';
+                    const source = entry.noteTitle ? `<div style="font-size: 0.7rem; color: #a29bfe; opacity: 0.8; margin-top:2px;">via ${entry.noteTitle}</div>` : '';
+                    dl.innerHTML = `<div style="flex:1;"><div style="color:var(--text-primary);">${entry.definition}</div>${source}</div><button class="btn-delete-term" style="opacity:0.3; padding:0;"><span class="material-symbols-rounded" style="font-size:14px;">close</span></button>`;
+                    dl.querySelector('button').onclick = (e) => { e.stopPropagation(); entries.splice(idx, 1); if (entries.length === 0) delete dictionary[term]; saveDictionary(); renderDictionaryList(); };
+                    ul.appendChild(dl);
+                });
+                li.appendChild(ul);
+            }
+            list.appendChild(li);
         });
     }
 

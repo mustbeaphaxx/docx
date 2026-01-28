@@ -1,19 +1,26 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
+// --- Firebase Initialization (Global Compat) ---
+let db = null;
+let userId = null;
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyAUSoShxLcXTktDxCWIYz30LpGXsXygwy4",
-    authDomain: "docx-f22ae.firebaseapp.com",
-    projectId: "docx-f22ae",
-    storageBucket: "docx-f22ae.firebasestorage.app",
-    messagingSenderId: "197965767535",
-    appId: "1:197965767535:web:f6c177f0a89bdbc3bbbe9a"
-};
+if (typeof firebase !== 'undefined' && window.firebaseConfig) {
+    try {
+        firebase.initializeApp(window.firebaseConfig);
+        db = firebase.database(); // Use Realtime Database for easier object sync
+        console.log("Firebase initialized");
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+        // Anonymous Auth for Data Segregation
+        firebase.auth().signInAnonymously().catch(console.error);
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                userId = user.uid;
+                console.log("Logged in as:", userId);
+                startFirebaseSync();
+            }
+        });
+    } catch (e) {
+        console.error("Firebase init error:", e);
+    }
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
     // --- Elements ---
@@ -147,37 +154,99 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     showEmptyState();
 
-    async function loadAllData() {
-        const docRef = doc(db, "app-data", "main");
-        try {
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                appData = data.appData || { lessons: [] };
-                mindMapsData = data.mindMapsData || [];
-                flashcardsApp = data.flashcardsApp || { lessons: [] };
-                mcqApp = data.mcqApp || { lessons: [] };
-                dictionary = data.dictionary || {};
-                console.log("Loaded data from Firestore");
+    // --- Firebase Sync Logic ---
+    function startFirebaseSync() {
+        if (!db || !userId) return;
+
+        const userRef = db.ref('users/' + userId);
+
+        // 1. Initial Fetch to see if cloud has data
+        userRef.once('value').then(snapshot => {
+            const data = snapshot.val();
+            if (data) {
+                // Cloud has data -> Overwrite Local with newer? 
+                // For simplicity: If cloud exists, use it.
+                console.log("Syncing from Cloud...");
+                if (data.appData) appData = data.appData;
+                if (data.dictionary) dictionary = data.dictionary;
+                if (data.mindMapsData) mindMapsData = data.mindMapsData;
+                if (data.flashcardsApp) flashcardsApp = data.flashcardsApp;
+                if (data.mcqApp) mcqApp = data.mcqApp;
+
+                // Save to LocalStorage to keep in sync
+                saveAllToLocal();
+                refreshAllViews();
             } else {
-                console.log("No such document in Firestore! Using LocalStorage fallback.");
-                loadFromLocalStorage();
+                // Cloud empty -> Upload Local
+                console.log("Uploading Local to Cloud...");
+                saveAllToCloud();
             }
-        } catch (error) {
-            console.error("Error getting document:", error);
-            loadFromLocalStorage();
-        }
+
+            // 2. Listen for changes from other devices
+            userRef.on('value', (snap) => {
+                const updated = snap.val();
+                if (updated) {
+                    if (updated.appData) appData = updated.appData;
+                    if (updated.dictionary) dictionary = updated.dictionary;
+                    if (updated.mindMapsData) mindMapsData = updated.mindMapsData;
+                    if (updated.flashcardsApp) flashcardsApp = updated.flashcardsApp;
+                    if (updated.mcqApp) mcqApp = updated.mcqApp;
+
+                    saveAllToLocal();
+                    refreshAllViews();
+                }
+            });
+        });
     }
 
-    function loadFromLocalStorage() {
-        appData = JSON.parse(localStorage.getItem('notes_app_data')) || { lessons: [] };
-        if (!appData.lessons) appData.lessons = [];
-        mindMapsData = JSON.parse(localStorage.getItem('mind_maps_data')) || [];
-        flashcardsApp = JSON.parse(localStorage.getItem('flashcards_app_data')) || { lessons: [] };
-        if (!flashcardsApp.lessons) flashcardsApp.lessons = [];
-        mcqApp = JSON.parse(localStorage.getItem('mcq_app_data')) || { lessons: [] };
-        if (!mcqApp.lessons) mcqApp.lessons = [];
-        dictionary = JSON.parse(localStorage.getItem('my_dictionary')) || {};
+    function saveAllToLocal() {
+        localStorage.setItem('notes_app_data', JSON.stringify(appData));
+        localStorage.setItem('my_dictionary', JSON.stringify(dictionary));
+        localStorage.setItem('mind_maps_data', JSON.stringify(mindMapsData));
+        localStorage.setItem('flashcards_app_data', JSON.stringify(flashcardsApp));
+        localStorage.setItem('mcq_app_data', JSON.stringify(mcqApp));
+    }
+
+    function saveAllToCloud() {
+        if (!db || !userId) return;
+        db.ref('users/' + userId).set({
+            appData,
+            dictionary,
+            mindMapsData,
+            flashcardsApp,
+            mcqApp,
+            lastUpdated: Date.now()
+        });
+    }
+
+    function refreshAllViews() {
+        renderFolderTree();
+        renderDictionaryList();
+        renderMindMapList();
+        renderFlashcardTree();
+        renderMcqTree();
+    }
+
+    // --- Persist Data (Modified to Sync) ---
+    function saveAppData() {
+        localStorage.setItem('notes_app_data', JSON.stringify(appData));
+        if (db && userId) db.ref('users/' + userId + '/appData').set(appData);
+    }
+    function saveDictionary() {
+        localStorage.setItem('my_dictionary', JSON.stringify(dictionary));
+        if (db && userId) db.ref('users/' + userId + '/dictionary').set(dictionary);
+    }
+    function saveMindMapsData() {
+        localStorage.setItem('mind_maps_data', JSON.stringify(mindMapsData));
+        if (db && userId) db.ref('users/' + userId + '/mindMapsData').set(mindMapsData);
+    }
+    function saveFlashcardsApp() {
+        localStorage.setItem('flashcards_app_data', JSON.stringify(flashcardsApp));
+        if (db && userId) db.ref('users/' + userId + '/flashcardsApp').set(flashcardsApp);
+    }
+    function saveMcqApp() {
+        localStorage.setItem('mcq_app_data', JSON.stringify(mcqApp));
+        if (db && userId) db.ref('users/' + userId + '/mcqApp').set(mcqApp);
     }
 
     function migrateDictionary() {

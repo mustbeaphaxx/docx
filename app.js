@@ -139,8 +139,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     let panZoomInstance = null;
 
     // --- Initialization ---
-    // --- Initialization ---
-    await loadAllData();
+    function loadFromLocalStorage() {
+        if (localStorage.getItem('notes_app_data')) appData = JSON.parse(localStorage.getItem('notes_app_data'));
+        if (localStorage.getItem('my_dictionary')) dictionary = JSON.parse(localStorage.getItem('my_dictionary'));
+        if (localStorage.getItem('mind_maps_data')) mindMapsData = JSON.parse(localStorage.getItem('mind_maps_data'));
+        if (localStorage.getItem('flashcards_app_data')) flashcardsApp = JSON.parse(localStorage.getItem('flashcards_app_data'));
+        if (localStorage.getItem('mcq_app_data')) mcqApp = JSON.parse(localStorage.getItem('mcq_app_data'));
+    }
+
+    loadFromLocalStorage();
 
     migrateDictionary();
     migrateMindMaps();

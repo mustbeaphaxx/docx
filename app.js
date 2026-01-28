@@ -163,13 +163,61 @@ document.addEventListener('DOMContentLoaded', async () => {
     const authError = document.getElementById('auth-error');
     const btnLogout = document.getElementById('btn-logout');
 
+
+    function startFirebaseSync() {
+        console.log("Starting Firebase Sync...");
+        if (!firebase.database || !userId) return;
+        // Re-init DB ref if needed
+        if (!db) db = firebase.database();
+        if (!db || !userId) return;
+
+        const userRef = db.ref('users/' + userId);
+
+        // 1. Initial Fetch to see if cloud has data
+        userRef.once('value').then(snapshot => {
+            const data = snapshot.val();
+            if (data) {
+                // Cloud has data -> Overwrite Local
+                console.log("Syncing from Cloud...");
+                if (data.appData) appData = data.appData;
+                if (data.dictionary) dictionary = data.dictionary;
+                if (data.mindMapsData) mindMapsData = data.mindMapsData;
+                if (data.flashcardsApp) flashcardsApp = data.flashcardsApp;
+                if (data.mcqApp) mcqApp = data.mcqApp;
+
+                // Save to LocalStorage to keep in sync
+                saveAllToLocal();
+                refreshAllViews();
+            } else {
+                // Cloud empty -> Upload Local
+                console.log("Uploading Local to Cloud...");
+                saveAllToCloud();
+            }
+
+            // 2. Listen for changes from other devices
+            userRef.on('value', (snap) => {
+                const updated = snap.val();
+                if (updated) {
+                    if (updated.appData) appData = updated.appData;
+                    if (updated.dictionary) dictionary = updated.dictionary;
+                    if (updated.mindMapsData) mindMapsData = updated.mindMapsData;
+                    if (updated.flashcardsApp) flashcardsApp = updated.flashcardsApp;
+                    if (updated.mcqApp) mcqApp = updated.mcqApp;
+
+                    saveAllToLocal();
+                    refreshAllViews();
+                }
+            });
+        });
+    }
+
     if (typeof firebase !== 'undefined' && firebase.auth) {
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 userId = user.uid;
                 console.log("Logged in as:", userId);
                 authModal.classList.add('hidden'); // Hide modal
-                startFirebaseSync();
+                try { startFirebaseSync(); } catch (e) { console.error("Sync Error:", e); }
             } else {
                 console.log("No user logged in");
                 userId = null;

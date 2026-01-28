@@ -463,10 +463,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         (appData.lessons || []).forEach(l => {
             l.topics.forEach(t => {
                 t.notes.forEach(n => {
-                    // Headers: Store as lowercase keys for lookup
-                    if (n.headers) n.headers.forEach(h => {
-                        if (h.length > 2) headerIndex[h.toLowerCase()] = n.id;
-                    });
                     // Titles: Store as lowercase keys for lookup
                     if (n.title && n.title.length > 2) headerIndex[n.title.toLowerCase()] = n.id;
                 });
@@ -923,6 +919,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
             saveAppData(); renderFolderTree();
+            // Ensure dictionary is re-rendered to update linked Note Titles if just the title changed (even if dictionary entries didn't)
+            if (itemType === 'note') renderDictionaryList();
         }
     }
 

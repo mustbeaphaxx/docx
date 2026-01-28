@@ -290,6 +290,8 @@ header h2 {
     line-height: 1.8;
     font-size: 1.05rem;
     color: #e0e0e0;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 .paper-sheet:focus {

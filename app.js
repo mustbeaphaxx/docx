@@ -412,42 +412,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    async function saveDataToFirestore() {
-        const dataToSave = {
-            appData,
-            mindMapsData,
-            flashcardsApp,
-            mcqApp,
-            dictionary
-        };
-        try {
-            await setDoc(doc(db, "app-data", "main"), dataToSave);
-            console.log("Document successfully written!");
-        } catch (e) {
-            console.error("Error writing document: ", e);
-        }
-    }
 
-    function saveDictionary() {
-        localStorage.setItem('my_dictionary', JSON.stringify(dictionary));
-        saveDataToFirestore();
-    }
-    function saveMindMapsData() {
-        localStorage.setItem('mind_maps_data', JSON.stringify(mindMapsData));
-        saveDataToFirestore();
-    }
-    function saveAppData() {
-        localStorage.setItem('notes_app_data', JSON.stringify(appData));
-        saveDataToFirestore();
-    }
-    function saveFlashcardsApp() {
-        localStorage.setItem('flashcards_app_data', JSON.stringify(flashcardsApp));
-        saveDataToFirestore();
-    }
-    function saveMcqApp() {
-        localStorage.setItem('mcq_app_data', JSON.stringify(mcqApp));
-        saveDataToFirestore();
-    }
 
     // --- Sidebar Tabs Logic ---
     sidebarTabs.forEach(btn => {

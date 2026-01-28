@@ -10,13 +10,6 @@ if (typeof firebase !== 'undefined' && window.firebaseConfig) {
 
         // Anonymous Auth for Data Segregation
         firebase.auth().signInAnonymously().catch(console.error);
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                userId = user.uid;
-                console.log("Logged in as:", userId);
-                startFirebaseSync();
-            }
-        });
     } catch (e) {
         console.error("Firebase init error:", e);
     }
@@ -162,6 +155,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     showEmptyState();
 
     // --- Firebase Sync Logic ---
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                userId = user.uid;
+                console.log("Logged in as:", userId);
+                startFirebaseSync();
+            }
+        });
+    }
+
     function startFirebaseSync() {
         if (!db || !userId) return;
 

@@ -274,13 +274,15 @@ header h2 {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     /* Smooth scroll iOS */
-    display: flex;
-    justify-content: center;
+    display: block;
+    /* Flexbox can cause height issues with scrolling */
 }
 
 .paper-sheet {
     background: var(--paper-bg);
     width: 100%;
+    margin: 0 auto;
+    /* Center in block container */
     max-width: 800px;
     min-height: 1000px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);

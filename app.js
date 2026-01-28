@@ -8,8 +8,8 @@ if (typeof firebase !== 'undefined' && window.firebaseConfig) {
         db = firebase.database(); // Use Realtime Database for easier object sync
         console.log("Firebase initialized");
 
-        // Anonymous Auth for Data Segregation
-        firebase.auth().signInAnonymously().catch(console.error);
+        // Anonymous Auth Removed for Email/Password
+        // firebase.auth().signInAnonymously().catch(console.error);
     } catch (e) {
         console.error("Firebase init error:", e);
     }
@@ -155,17 +155,64 @@ document.addEventListener('DOMContentLoaded', async () => {
     showEmptyState();
 
     // --- Firebase Sync Logic ---
+    const authModal = document.getElementById('auth-modal');
+    const authEmail = document.getElementById('auth-email');
+    const authPassword = document.getElementById('auth-password');
+    const btnLoginAction = document.getElementById('btn-login-action');
+    const btnSignupAction = document.getElementById('btn-signup-action');
+    const authError = document.getElementById('auth-error');
+    const btnLogout = document.getElementById('btn-logout');
+
     if (typeof firebase !== 'undefined' && firebase.auth) {
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 userId = user.uid;
                 console.log("Logged in as:", userId);
+                authModal.classList.add('hidden'); // Hide modal
                 startFirebaseSync();
+            } else {
+                console.log("No user logged in");
+                userId = null;
+                db = null; // Disconnect DB
+                authModal.classList.remove('hidden'); // Show modal
+                // Clear Data on Logout? Typically yes for security, but maybe keep local?
+                // For sync purposes, we want to clear or switch. Let's reloading page or just clearing.
+                // Doing nothing keeps stale data. 
             }
+        });
+
+        // Login Action
+        if (btnLoginAction) btnLoginAction.addEventListener('click', () => {
+            const email = authEmail.value;
+            const pass = authPassword.value;
+            authError.textContent = "";
+            firebase.auth().signInWithEmailAndPassword(email, pass).catch(e => {
+                authError.textContent = e.message;
+            });
+        });
+
+        // Signup Action
+        if (btnSignupAction) btnSignupAction.addEventListener('click', () => {
+            const email = authEmail.value;
+            const pass = authPassword.value;
+            authError.textContent = "";
+            firebase.auth().createUserWithEmailAndPassword(email, pass).catch(e => {
+                authError.textContent = e.message;
+            });
+        });
+
+        // Logout Action
+        if (btnLogout) btnLogout.addEventListener('click', () => {
+            firebase.auth().signOut().then(() => {
+                location.reload(); // Reload to clear state
+            });
         });
     }
 
     function startFirebaseSync() {
+        if (!firebase.database || !userId) return;
+        // Re-init DB ref if needed
+        if (!db) db = firebase.database();
         if (!db || !userId) return;
 
         const userRef = db.ref('users/' + userId);

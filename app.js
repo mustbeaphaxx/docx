@@ -367,10 +367,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const ts = updateTimestamp();
         if (db && userId) db.ref('users/' + userId).update({ mcqApp, lastUpdated: ts });
     }
-    function saveMcqApp() {
-        localStorage.setItem('mcq_app_data', JSON.stringify(mcqApp));
-        if (db && userId) db.ref('users/' + userId + '/mcqApp').set(mcqApp);
-    }
+
 
     function migrateDictionary() {
         let changed = false;

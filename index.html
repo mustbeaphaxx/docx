@@ -465,43 +465,44 @@
     </div>
 
     <!-- Info / Format Helper Modal -->
-    <div id="info-modal" class="popover hidden" style="z-index: 2100;">
+    <div id="info-modal" class="popover hidden"
+        style="z-index: 2100; position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.8);">
         <div class="popover-content" style="width: 500px; max-width: 90vw;">
             <h3 style="margin-bottom: 1rem; color: var(--accent-color);">Import Formats</h3>
 
             <h4 style="color: var(--text-primary); margin-top: 1rem; margin-bottom: 0.5rem;">Flashcards (.docx)</h4>
             <div
                 style="background: rgba(255,255,255,0.05); padding: 0.8rem; border-radius: 6px; font-family: monospace; font-size: 0.85rem; color: #a0a0a0;">
-                ***Question Term<br>
-                **Answer Definition or Explanation text here.<br>
-                ***Next Question<br>
-                **Next Answer
+                !!!f: Question Term;<br>
+                b: Answer Definition;<br>
+                e: Explanation Text!!!
             </div>
-            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">Use <code>***</code> for
-                Front/Question and <code>**</code> for Back/Answer.</p>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">Use
+                <code>!!!f: ...; b: ...; e: ...!!!</code> structure.</p>
 
             <h4 style="color: var(--text-primary); margin-top: 1.5rem; margin-bottom: 0.5rem;">MCQs (.docx)</h4>
             <div
                 style="background: rgba(255,255,255,0.05); padding: 0.8rem; border-radius: 6px; font-family: monospace; font-size: 0.85rem; color: #a0a0a0;">
-                !!!q:What is the powerhouse of the cell?;<br>
-                a:Nucleus;<br>
-                b:Mitochondria;<br>
-                c:Ribosome;<br>
-                d:Golgi Body;<br>
-                x:b;<br>
-                e:Mitochondria produce ATP.!!!
-            </div>
-            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">
-                Starts/Ends with <code>!!!</code>. <br>
-                <code>q:</code> Question, <code>a-d:</code> Options, <code>x:</code> Correct Option Letter,
-                <code>e:</code> Explanation.
-            </p>
-
-            <div style="margin-top: 1.5rem; text-align: right;">
-                <button id="btn-close-info" class="upload-btn"
-                    style="width: auto; padding: 0.5rem 1.5rem;">Close</button>
+                !!!q: Question;<br>
+                a: A;<br>
+                b: B;<br>
+                c: C;<br>
+                d: D;<br>
+                e: E;<br>
+                b;<br>
+                e: Expl!!!
             </div>
         </div>
+        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">
+            Starts/Ends with <code>!!!</code>. <br>
+            <code>q:</code> Question, <code>a-d:</code> Options, <code>x:</code> Correct Option Letter,
+            <code>e:</code> Explanation.
+        </p>
+
+        <div style="margin-top: 1.5rem; text-align: right;">
+            <button id="btn-close-info" class="upload-btn" style="width: auto; padding: 0.5rem 1.5rem;">Close</button>
+        </div>
+    </div>
     </div>
 
     <!-- Auth Modal -->

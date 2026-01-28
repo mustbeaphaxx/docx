@@ -870,8 +870,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     function parseAndCreateQuiz(topicId, name, text) {
-        // Format: !!!q:Question; a:OpA; b:OpB; c:OpC; d:OpD; e:OpE; x; e:Explanation!!!
-        const regex = /!!!q:\s*([^;]+?);\s*a:\s*([^;]+?);\s*b:\s*([^;]+?);\s*c:\s*([^;]+?);\s*d:\s*([^;]+?);\s*e:\s*([^;]+?);\s*([a-e])\s*;\s*e:\s*([^!]+?)!!!/gi;
+        // Updated Format: !!!q:Question; a:OpA; b:OpB; c:OpC; d:OpD; e:OpE; x; e:Explanation!!!
+        // Note: x is the correct letter (a-e). Explanation key is 'e:' again? 
+        // User example: ...;e:..;d;e:..!!!
+        // To avoid ambiguity, we rely on the specific order.
+        const regex = /!!!q:\s*(.*?);\s*a:\s*(.*?);\s*b:\s*(.*?);\s*c:\s*(.*?);\s*d:\s*(.*?);\s*e:\s*(.*?);\s*([a-e])\s*;\s*e:\s*(.*?)!!!/gis;
         const questions = [];
         let match;
         while ((match = regex.exec(text)) !== null) {
@@ -888,6 +891,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 explanation: match[8].trim()
             });
         }
+
         if (questions.length === 0) { alert("No MCQs found in format !!!q:..;a:..;b:..;c:..;d:..;e:..;x;e:..!!!"); return; }
         const newId = createQuiz(topicId, name, questions);
         if (newId) loadQuiz(newId);
@@ -1242,7 +1246,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         reader.onload = function (evt) {
             mammoth.extractRawText({ arrayBuffer: evt.target.result }).then(res => {
                 // Flashcard parsing
-                const regex = /!!!f:\s*([^;]+?);\s*b:\s*([^;]+?);\s*e:\s*([^!]+?)!!!/gi;
+                // Flashcard parsing
+                const regex = /!!!f:\s*(.*?);\s*b:\s*(.*?);\s*e:\s*(.*?)!!!/gis;
                 const cards = []; let match; while ((match = regex.exec(res.value)) !== null) cards.push({ front: match[1].trim(), back: match[2].trim(), explanation: match[3].trim() });
                 if (cards.length === 0) { alert("No cards found"); return; }
                 const newId = createDeck(topicId, file.name.replace('.docx', ''), cards);

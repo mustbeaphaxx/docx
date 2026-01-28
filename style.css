@@ -23,6 +23,8 @@ body {
     background-color: var(--bg-color);
     color: var(--text-primary);
     height: 100vh;
+    height: 100dvh;
+    /* Mobile viewport fix */
     overflow: hidden;
     background-image:
         radial-gradient(circle at 10% 20%, rgba(108, 92, 231, 0.15) 0%, transparent 20%),
@@ -32,6 +34,7 @@ body {
 .app-container {
     display: flex;
     height: 100%;
+    height: 100dvh;
 }
 
 /* Sidebar */
@@ -46,7 +49,9 @@ body {
     flex-direction: column;
     gap: 1.5rem;
     transition: width 0.3s ease, padding 0.3s ease, opacity 0.3s;
-    overflow: hidden;
+    overflow-y: auto;
+    /* Allow sidebar scrolling */
+    -webkit-overflow-scrolling: touch;
     white-space: nowrap;
 }
 
@@ -233,6 +238,8 @@ body {
     flex-direction: column;
     background: radial-gradient(circle at 50% 50%, rgba(20, 20, 30, 0.5) 0%, rgba(10, 10, 15, 0.8) 100%);
     transition: margin 0.3s ease;
+    overflow: hidden;
+    /* Container for scrollable editor */
 }
 
 header {
@@ -260,6 +267,8 @@ header h2 {
     flex: 1;
     padding: 2rem;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Smooth scroll iOS */
     display: flex;
     justify-content: center;
 }
@@ -915,7 +924,7 @@ header h2 {
    MOBILE RESPONSIVE (iPhone / Small Screens)
    ========================================= */
 @media screen and (max-width: 768px) {
-    
+
     /* 1. App Container changes */
     .app-container {
         flex-direction: column;
@@ -929,21 +938,25 @@ header h2 {
         top: 0;
         left: 0;
         height: 100vh;
-        width: 85vw; /* Wider on mobile for better usability */
+        width: 85vw;
+        /* Wider on mobile for better usability */
         max-width: 320px;
         z-index: 2000;
-        transform: translateX(-100%); /* Hidden by default */
-        box-shadow: 2px 0 20px rgba(0,0,0,0.5);
+        transform: translateX(-100%);
+        /* Hidden by default */
+        box-shadow: 2px 0 20px rgba(0, 0, 0, 0.5);
     }
 
     .sidebar.mobile-open {
-        transform: translateX(0); /* Slide in */
+        transform: translateX(0);
+        /* Slide in */
     }
-    
+
     .sidebar.collapsed {
         /* Override desktop "collapsed" logic if necessary, 
            or just rely on mobile-open class */
-        width: 85vw; /* maintain width so it doesn't shrink to 0 */
+        width: 85vw;
+        /* maintain width so it doesn't shrink to 0 */
         transform: translateX(-100%);
         padding: 2rem;
         opacity: 1;
@@ -953,7 +966,8 @@ header h2 {
     /* 3. Main Content: Full width */
     .main-content {
         width: 100%;
-        margin-left: 0 !important; /* Override any desktop margin */
+        margin-left: 0 !important;
+        /* Override any desktop margin */
     }
 
     /* 4. Overlay for clicking outside sidebar */
@@ -963,11 +977,12 @@ header h2 {
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: rgba(0,0,0,0.5);
+        background: rgba(0, 0, 0, 0.5);
         backdrop-filter: blur(4px);
         z-index: 1999;
         display: none;
     }
+
     .sidebar-overlay.active {
         display: block;
     }
@@ -979,12 +994,13 @@ header h2 {
 
     /* Ensure hamburger menu is visible */
     #btn-expand-sidebar {
-        display: flex !important; 
+        display: flex !important;
     }
-    
+
     /* 6. Content areas padding (Note, Maps, etc) */
     .paper-sheet {
-        padding: 2rem 1.5rem; /* Smaller padding on phone */
+        padding: 2rem 1.5rem;
+        /* Smaller padding on phone */
         width: 100%;
         min-height: 80vh;
     }
@@ -992,9 +1008,10 @@ header h2 {
     .flashcard-container {
         padding: 1rem;
     }
-    
+
     .flashcard {
-        height: 400px; /* Taller for vertical scrolling if needed */
+        height: 400px;
+        /* Taller for vertical scrolling if needed */
         max-width: 100%;
     }
 
@@ -1016,7 +1033,7 @@ header h2 {
     .logo h1 {
         font-size: 1.3rem;
     }
-    
+
     header h2 {
         font-size: 1.1rem;
         white-space: nowrap;
@@ -1024,7 +1041,7 @@ header h2 {
         text-overflow: ellipsis;
         max-width: 60vw;
     }
-    
+
     /* Dictionary Popup mobile fix */
     #dictionary-popup {
         width: 90vw;

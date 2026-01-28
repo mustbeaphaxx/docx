@@ -1,3 +1,4 @@
+console.log("App Version: Fixed Crash 3 (Safari Check) - " + new Date().toISOString());
 // --- Firebase Initialization (Global Compat) ---
 let db = null;
 let userId = null;
@@ -517,43 +518,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- Helper Functions ---
+    function generateId() {
+        return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
     function createLesson(name) {
-        const id = crypto.randomUUID();
+        const id = generateId();
         appData.lessons.push({ id, name, topics: [] });
         saveAppData(); renderFolderTree();
         return id;
     }
     function createTopic(lessonId, name) {
         const lesson = appData.lessons.find(l => l.id === lessonId);
-        if (lesson) { lesson.topics.push({ id: crypto.randomUUID(), name, notes: [] }); saveAppData(); renderFolderTree(); }
+        if (lesson) { lesson.topics.push({ id: generateId(), name, notes: [] }); saveAppData(); renderFolderTree(); }
     }
     function createNote(topicId, title, content = '') {
         for (const lesson of appData.lessons) {
             const topic = lesson.topics.find(t => t.id === topicId);
-            if (topic) { const id = crypto.randomUUID(); topic.notes.push({ id, title, content, headers: [] }); saveAppData(); renderFolderTree(); return id; }
+            if (topic) { const id = generateId(); topic.notes.push({ id, title, content, headers: [] }); saveAppData(); renderFolderTree(); return id; }
         }
     }
 
     // --- Flashcard Logic ---
     function createFCLesson(name) {
-        const id = crypto.randomUUID();
+        const id = generateId();
         flashcardsApp.lessons.push({ id, name, topics: [] });
         saveFlashcardsApp(); renderFlashcardTree(); return id;
     }
     function createFCTopic(lessonId, name) {
         const l = flashcardsApp.lessons.find(x => x.id === lessonId);
-        if (l) { l.topics.push({ id: crypto.randomUUID(), name, decks: [] }); saveFlashcardsApp(); renderFlashcardTree(); }
+        if (l) { l.topics.push({ id: generateId(), name, decks: [] }); saveFlashcardsApp(); renderFlashcardTree(); }
     }
     function createDeck(topicId, name, cards = []) {
         for (const lesson of flashcardsApp.lessons) {
             const t = lesson.topics.find(x => x.id === topicId);
-            if (t) { const id = crypto.randomUUID(); t.decks.push({ id, name, cards }); saveFlashcardsApp(); renderFlashcardTree(); return id; }
+            if (t) { const id = generateId(); t.decks.push({ id, name, cards }); saveFlashcardsApp(); renderFlashcardTree(); return id; }
         }
     }
 
     // --- MCQ Logic ---
     function createMcqLesson(name) {
-        const id = crypto.randomUUID();
+        const id = generateId();
         mcqApp.lessons.push({ id, name, topics: [] });
         saveMcqApp(); renderMcqTree(); return id;
     }
@@ -1031,6 +1035,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         `;
 
+
+
         if (type !== 'note' && type !== 'deck' && type !== 'quiz') {
             const children = document.createElement('div');
             children.className = `nav-children ${isOpen ? '' : 'hidden'}`;
@@ -1040,14 +1046,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const btnEdit = header.querySelector('.action-btn.edit');
         const btnDelete = header.querySelector('.action-btn.delete');
-        btnEdit.onclick = (e) => { e.stopPropagation(); renameItemOriginal(itemType, id, label, itemType); };
-        btnDelete.onclick = (e) => { e.stopPropagation(); deleteItemOriginal(itemType, id, itemType); };
+        if (btnEdit) btnEdit.onclick = (e) => { e.stopPropagation(); renameItemOriginal(itemType, id, label, itemType); };
+        if (btnDelete) btnDelete.onclick = (e) => { e.stopPropagation(); if (confirm('Delete this item?')) deleteItem(id, itemType); };
         return li;
     }
 
-    function renameItemOriginal(type, id, oldName, itemType) {
-        const newName = prompt(`Rename ${type}:`, oldName);
-        if (!newName || newName === oldName) return;
+    function renameItem(id, itemType, newName) {
+        if (!newName) return;
 
         if (itemType.startsWith('mcq-') || itemType === 'quiz') {
             if (itemType === 'mcq-lesson') { const l = mcqApp.lessons.find(x => x.id === id); if (l) l.name = newName; }
@@ -1090,8 +1095,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    function deleteItemOriginal(type, id, itemType) {
-        if (!confirm(`Delete ${type}?`)) return;
+    function deleteItem(id, itemType) {
+        // Confirmation handled by caller
 
         if (itemType === 'mindmap') {
             mindMapsData = mindMapsData.filter(m => m.id !== id);

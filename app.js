@@ -248,32 +248,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // Login Action
-        if (btnLoginAction) btnLoginAction.addEventListener('click', () => {
-            const email = authEmail.value;
-            const pass = authPassword.value;
-            authError.textContent = "";
-            firebase.auth().signInWithEmailAndPassword(email, pass).catch(e => {
-                authError.textContent = e.message;
-            });
-        });
 
-        // Signup Action
-        if (btnSignupAction) btnSignupAction.addEventListener('click', () => {
-            const email = authEmail.value;
-            const pass = authPassword.value;
-            authError.textContent = "";
-            firebase.auth().createUserWithEmailAndPassword(email, pass).catch(e => {
-                authError.textContent = e.message;
-            });
-        });
 
-        // Logout Action
-        if (btnLogout) btnLogout.addEventListener('click', () => {
-            firebase.auth().signOut().then(() => {
-                location.reload(); // Reload to clear state
-            });
-        });
+
     }
 
     function startFirebaseSync() {
@@ -1008,7 +985,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnAddTopic.onclick = (e) => { e.stopPropagation(); const name = prompt("Enter topic name:"); if (name) createTopic(lesson.id, name); };
             actions.insertBefore(btnAddTopic, actions.firstChild);
 
-            lesson.topics.forEach(topic => {
+            (lesson.topics || []).forEach(topic => {
                 const topicItem = createTreeItem(topic.name, 'topic', false, topic.id, 'topic');
                 const tActions = topicItem.querySelector('.tree-actions');
                 const btnAddNote = document.createElement('button');
@@ -1017,7 +994,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 btnAddNote.onclick = (e) => { e.stopPropagation(); const name = prompt("Enter note title:"); if (name) { const id = createNote(topic.id, name); loadNote(id); } };
                 tActions.insertBefore(btnAddNote, tActions.firstChild);
 
-                topic.notes.forEach(note => {
+                (topic.notes || []).forEach(note => {
                     const noteItem = createTreeItem(note.title, 'note', false, note.id, 'note');
                     noteItem.querySelector('.nav-header').onclick = (e) => { if (e.target.closest('.action-btn')) return; loadNote(note.id); };
                     if (currentNoteId === note.id) noteItem.querySelector('.nav-header').classList.add('active');
@@ -1274,8 +1251,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 2. Collect all Note Titles
         const noteItems = [];
         (appData.lessons || []).forEach(l => {
-            l.topics.forEach(t => {
-                t.notes.forEach(n => {
+            (l.topics || []).forEach(t => {
+                (t.notes || []).forEach(n => {
                     if (n.title && n.title.length > 0) {
                         noteItems.push({
                             type: 'note',
@@ -1487,6 +1464,47 @@ document.addEventListener('DOMContentLoaded', async () => {
             mammoth.convertToHtml({ arrayBuffer: evt.target.result }).then(res => { const newId = createNote(topicId, file.name.replace('.docx', ''), res.value); loadNote(newId); fileInputModal.value = ''; }).catch(err => console.error(err));
         };
         reader.readAsArrayBuffer(file);
+    });
+
+
+
+    // --- Auth Event Listeners (Global Scope) ---
+    if (btnLoginAction) btnLoginAction.addEventListener('click', () => {
+        console.log("DEBUG: Login Clicked (Global)");
+        if (typeof firebase === 'undefined' || !firebase.auth) {
+            console.error("Firebase not loaded");
+            alert("System Error: Firebase SDK not loaded. Check internet connection.");
+            return;
+        }
+        const email = authEmail.value;
+        const password = authPassword.value;
+        if (!email || !password) { authError.textContent = "Enter email and password"; return; }
+        firebase.auth().signInWithEmailAndPassword(email, password)
+            .then(() => console.log("DEBUG: Login Success"))
+            .catch((error) => {
+                console.error("Login Error:", error);
+                authError.textContent = error.message;
+            });
+    });
+
+    if (btnSignupAction) btnSignupAction.addEventListener('click', () => {
+        console.log("DEBUG: Signup Clicked (Global)");
+        if (typeof firebase === 'undefined' || !firebase.auth) { alert("Firebase not loaded!"); return; }
+        const email = authEmail.value;
+        const password = authPassword.value;
+        if (!email || !password) { authError.textContent = "Enter email and password"; return; }
+        firebase.auth().createUserWithEmailAndPassword(email, password)
+            .then(() => console.log("DEBUG: Signup Success"))
+            .catch((error) => {
+                console.error("Signup Error:", error);
+                authError.textContent = error.message;
+            });
+    });
+
+    if (btnLogout) btnLogout.addEventListener('click', () => {
+        if (firebase && firebase.auth) {
+            firebase.auth().signOut().then(() => { window.location.reload(); });
+        } else { window.location.reload(); }
     });
 
 });

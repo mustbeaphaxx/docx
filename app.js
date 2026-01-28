@@ -304,23 +304,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    function saveAllToLocal() {
+    function saveAllToLocal(updateTimestamp = true) {
         localStorage.setItem('notes_app_data', JSON.stringify(appData));
         localStorage.setItem('my_dictionary', JSON.stringify(dictionary));
         localStorage.setItem('mind_maps_data', JSON.stringify(mindMapsData));
         localStorage.setItem('flashcards_app_data', JSON.stringify(flashcardsApp));
         localStorage.setItem('mcq_app_data', JSON.stringify(mcqApp));
+        if (updateTimestamp) localStorage.setItem('lastUpdated', Date.now().toString());
     }
 
     function saveAllToCloud() {
         if (!db || !userId) return;
+        const now = Date.now();
+        localStorage.setItem('lastUpdated', now.toString()); // Update local timestamp too
         db.ref('users/' + userId).set({
             appData,
             dictionary,
             mindMapsData,
             flashcardsApp,
             mcqApp,
-            lastUpdated: Date.now()
+            lastUpdated: now
         });
     }
 
@@ -333,21 +336,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- Persist Data (Modified to Sync) ---
+    function updateTimestamp() {
+        const now = Date.now();
+        localStorage.setItem('lastUpdated', now.toString());
+        return now;
+    }
+
     function saveAppData() {
         localStorage.setItem('notes_app_data', JSON.stringify(appData));
-        if (db && userId) db.ref('users/' + userId + '/appData').set(appData);
+        const ts = updateTimestamp();
+        if (db && userId) db.ref('users/' + userId).update({ appData, lastUpdated: ts });
     }
     function saveDictionary() {
         localStorage.setItem('my_dictionary', JSON.stringify(dictionary));
-        if (db && userId) db.ref('users/' + userId + '/dictionary').set(dictionary);
+        const ts = updateTimestamp();
+        if (db && userId) db.ref('users/' + userId).update({ dictionary, lastUpdated: ts });
     }
     function saveMindMapsData() {
         localStorage.setItem('mind_maps_data', JSON.stringify(mindMapsData));
-        if (db && userId) db.ref('users/' + userId + '/mindMapsData').set(mindMapsData);
+        const ts = updateTimestamp();
+        if (db && userId) db.ref('users/' + userId).update({ mindMapsData, lastUpdated: ts });
     }
     function saveFlashcardsApp() {
         localStorage.setItem('flashcards_app_data', JSON.stringify(flashcardsApp));
-        if (db && userId) db.ref('users/' + userId + '/flashcardsApp').set(flashcardsApp);
+        const ts = updateTimestamp();
+        if (db && userId) db.ref('users/' + userId).update({ flashcardsApp, lastUpdated: ts });
+    }
+    function saveMcqApp() {
+        localStorage.setItem('mcq_app_data', JSON.stringify(mcqApp));
+        const ts = updateTimestamp();
+        if (db && userId) db.ref('users/' + userId).update({ mcqApp, lastUpdated: ts });
     }
     function saveMcqApp() {
         localStorage.setItem('mcq_app_data', JSON.stringify(mcqApp));

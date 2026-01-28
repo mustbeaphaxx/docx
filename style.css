@@ -1006,10 +1006,13 @@ header h2 {
 
     /* 6. Content areas padding (Note, Maps, etc) */
     .paper-sheet {
-        padding: 2rem 1.5rem;
+        padding: 1.5rem 1rem;
         /* Smaller padding on phone */
         width: 100%;
+        max-width: 100%;
         min-height: 80vh;
+        overflow-x: hidden;
+        /* Prevent horizontal overflow */
     }
 
     .flashcard-container {

@@ -26,6 +26,11 @@ body {
     height: 100dvh;
     /* Mobile viewport fix */
     overflow: hidden;
+    overscroll-behavior-y: none;
+    /* Prevent bounce */
+    position: fixed;
+    /* Lock body in place */
+    width: 100%;
     background-image:
         radial-gradient(circle at 10% 20%, rgba(108, 92, 231, 0.15) 0%, transparent 20%),
         radial-gradient(circle at 90% 80%, rgba(0, 184, 148, 0.1) 0%, transparent 20%);

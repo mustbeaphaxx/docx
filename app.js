@@ -471,6 +471,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         let html = editor.innerHTML;
 
+        // Cleanup: Remove stale links (e.g. if note was renamed)
+        // We strip the span if the text inside is no longer a valid note title pointing to the correct ID
+        html = html.replace(/<span class="linked-header"[^>]*data-note-id="([^"]+)"[^>]*>(.*?)<\/span>/gi, (match, id, text) => {
+            const key = text.toLowerCase();
+            // If the text is still a valid title AND it points to the same note ID, keep it.
+            // Otherwise, strip the span (return just the text).
+            if (headerIndex[key] && headerIndex[key] === id) {
+                return match;
+            }
+            return text;
+        });
+
         // 1. Sort Headers/Titles by Length DESC to prevent substring collisions
         const sortedHeaderKeys = Object.keys(headerIndex).sort((a, b) => b.length - a.length);
 
